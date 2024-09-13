@@ -4,10 +4,10 @@ from mysql.connector import Error
 def create_connection():
     try:
         conn = mysql.connector.connect(
-            host='127.0.0.1:3306',
+            host='127.0.0.1',
             user='root',
             password='1Y6%11]5?16f',
-            database='fitness_center_database'
+            database='fitness_center'
         )
         return conn
     except Error as e:
@@ -15,14 +15,14 @@ def create_connection():
         return None
 
 # Function to add a new member to the Members table
-def add_member(id, name, age):
+def add_member(name, age):
     conn = create_connection()
     if conn is None:
         return
     try:
         cursor = conn.cursor()
 
-        cursor.execute("INSERT INTO Members (id, name, age) VALUES (%s, %s, %s)", (id, name, age))
+        cursor.execute("INSERT INTO Members (name, age) VALUES (%s, %s)", (name, age))
     
         conn.commit()
         print(f"Member {name} added successfully!")
@@ -47,7 +47,7 @@ def add_workout_session(member_id, date, duration_minutes, calories_burned):
             raise ValueError("Invalid member ID")
         
         cursor.execute(
-            "INSERT INTO WorkoutSessions (member_id, date, duration_minutes, calories_burned) VALUES (%s, %s, %s, %s)",
+            "INSERT INTO WorkoutSessions (member_id, session_date, session_time, activity) VALUES (%s, %s, %s, %s)",
             (member_id, date, duration_minutes, calories_burned)
         )
 
@@ -93,11 +93,11 @@ def delete_workout_session(session_id):
     try:
         cursor = conn.cursor()
         
-        cursor.execute("SELECT * FROM WorkoutSessions WHERE session_id = %s", (session_id,))
+        cursor.execute("SELECT * FROM WorkoutSessions WHERE id = %s", (session_id,))
         if cursor.fetchone() is None:
             raise ValueError("Workout session not found")
         
-        cursor.execute("DELETE FROM WorkoutSessions WHERE session_id = %s", (session_id,))
+        cursor.execute("DELETE FROM WorkoutSessions WHERE id = %s", (session_id,))
         
         conn.commit()
         print(f"Workout session ID {session_id} deleted successfully!")
@@ -117,15 +117,15 @@ def get_members_in_age_range(start_age, end_age):
     try:
         cursor = conn.cursor()
         
-        cursor.execute("SELECT * FROM Members WHERE age BETWEEN 25 AND 30", (25, 30))
+        cursor.execute("SELECT * FROM Members WHERE age BETWEEN %s AND %s", (start_age, end_age))
         
         members = cursor.fetchall()
         if members:
-            print(f"Members between ages {25} and {30}:")
+            print(f"Members between ages {start_age} and {end_age}:")
             for member in members:
                 print(member)
         else:
-            print(f"No members found between ages {25} and {30}")
+            print(f"No members found between ages {start_age} and {end_age}")
         
     finally:
         cursor.close()
@@ -135,8 +135,8 @@ def get_members_in_age_range(start_age, end_age):
 if __name__ == "__main__":
 
     print("Testing Add Member:")
-    add_member(1, 'John Doe', 25)
-    add_member(2, 'Jane Doe', 28)
+    add_member('John Doe', 25)
+    add_member('Jane Doe', 28)
 
     print("\nTesting Add Workout Session:")
     add_workout_session(1, '2024-09-11', 60, 500)
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     update_member_age(1, 26)
 
     print("\nTesting Delete Workout Session:")
-    delete_workout_session(1)
+    delete_workout_session(2)
 
     print("\nTesting Get Members in Age Range:")
     get_members_in_age_range(25, 30)
